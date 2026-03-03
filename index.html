@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Easy PDF Splitter</title>
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <style>
+        /* This makes the website look neat and centered */
+        body { font-family: sans-serif; padding: 20px; text-align: center; }
+        .box { border: 2px solid #ccc; padding: 20px; border-radius: 10px; max-width: 400px; margin: auto; }
+        input, button { margin: 10px; padding: 10px; font-size: 16px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h2>Cut Your PDF</h2>
+        
+        <p>1. Choose your big PDF file.</p>
+        <input type="file" id="pdfFile" accept="application/pdf">
+
+        <p>2. Type the pages for your chapter (like 1-5).</p>
+        <input type="text" id="pageRange" placeholder="Example: 1-5">
+
+        <br>
+        <button onclick="splitMyPdf()">Split It!</button>
+
+        <p id="message"></p>
+    </div>
+
+    <script>
+        // This is the brain that does the work when you click the button
+        async function splitMyPdf() {
+            const fileInput = document.getElementById('pdfFile');
+            const rangeInput = document.getElementById('pageRange').value;
+            const messageBox = document.getElementById('message');
+
+            // Check if a file was picked
+            if (fileInput.files.length === 0) {
+                messageBox.innerText = "Please pick a file first!";
+                return;
+            }
+
+            messageBox.innerText = "Working on it...";
+
+            try {
+                // Read the numbers you typed
+                const parts = rangeInput.split('-');
+                const startPage = parseInt(parts[0]) - 1; // Computers start counting at 0, not 1
+                const endPage = parseInt(parts[1]) - 1;
+
+                // Read the original big PDF
+                const fileBytes = await fileInput.files[0].arrayBuffer();
+                const pdfDoc = await PDFLib.PDFDocument.load(fileBytes);
+
+                // Create a brand new, empty PDF
+                const newPdf = await PDFLib.PDFDocument.create();
+
+                // Copy only the pages we want into the new PDF
+                for (let i = startPage; i <= endPage; i++) {
+                    const [copiedPage] = await newPdf.copyPages(pdfDoc, [i]);
+                    newPdf.addPage(copiedPage);
+                }
+
+                // Save the new PDF and start downloading it to your computer
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = "My_New_Chapter.pdf";
+                link.click();
+
+                messageBox.innerText = "All done! Your chapter is downloading.";
+            } catch (error) {
+                // If you type a page that doesn't exist, it warns you
+                messageBox.innerText = "Oops! Something went wrong. Please check your page numbers.";
+            }
+        }
+    </script>
+</body>
+</html>
