@@ -1,77 +1,203 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Easy PDF Splitter</title>
+    <title>Smart & Beautiful PDF Splitter</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <style>
-        /* This makes the website look neat and centered */
-        body { font-family: sans-serif; padding: 20px; text-align: center; }
-        .box { border: 2px solid #ccc; padding: 20px; border-radius: 10px; max-width: 400px; margin: auto; }
-        input, button { margin: 10px; padding: 10px; font-size: 16px; }
+        /* The beautiful background colors and font */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%); 
+            min-height: 100vh; 
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            color: #333; 
+        }
+        
+        /* The floating white card in the middle */
+        .box { 
+            background-color: white; 
+            padding: 40px; 
+            border-radius: 15px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); 
+            max-width: 600px; 
+            width: 90%; 
+            text-align: center; 
+        }
+
+        h2 { color: #4a4a4a; margin-bottom: 10px; }
+        p { color: #666; margin-bottom: 20px; }
+
+        /* Making the file chooser look neat */
+        input[type="file"] { 
+            display: block; 
+            margin: 20px auto; 
+            padding: 10px; 
+            border: 2px dashed #9face6; 
+            border-radius: 10px; 
+            background-color: #f9f9f9; 
+            cursor: pointer; 
+            width: 80%; 
+        }
+
+        /* The colorful download buttons */
+        button { 
+            background-color: #5c6bc0; 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: background-color 0.3s; 
+        }
+        
+        button:hover { background-color: #3f51b5; }
+
+        /* The neat little boxes for each chapter */
+        .chapter-item { 
+            background-color: #f0f4ff; 
+            margin: 15px 0; 
+            padding: 15px 20px; 
+            border-radius: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            border-left: 5px solid #5c6bc0; 
+        }
+        
+        .chapter-item span { text-align: left; font-size: 15px; }
+        
+        /* The text that tells you what the website is doing */
+        #statusMessage { font-weight: bold; color: #5c6bc0; margin: 20px 0; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2>Cut Your PDF</h2>
+        <h2>Smart Chapter Finder</h2>
+        <p>Choose your big PDF file. I will read it and find the chapters for you!</p>
         
-        <p>1. Choose your big PDF file.</p>
-        <input type="file" id="pdfFile" accept="application/pdf">
-
-        <p>2. Type the pages for your chapter (like 1-5).</p>
-        <input type="text" id="pageRange" placeholder="Example: 1-5">
-
-        <br>
-        <button onclick="splitMyPdf()">Split It!</button>
-
-        <p id="message"></p>
+        <input type="file" id="pdfFile" accept="application/pdf" onchange="readAndFindChapters()">
+        
+        <p id="statusMessage">Waiting for your file...</p>
+        
+        <div id="chapterList"></div>
     </div>
 
     <script>
-        // This is the brain that does the work when you click the button
-        async function splitMyPdf() {
+        // Tell the reading helper exactly how to work
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+        let myOriginalPdfBytes; 
+        let foundChapters = [];
+
+        // This function acts like eyes, flipping through pages to find chapters
+        async function readAndFindChapters() {
             const fileInput = document.getElementById('pdfFile');
-            const rangeInput = document.getElementById('pageRange').value;
-            const messageBox = document.getElementById('message');
+            const statusBox = document.getElementById('statusMessage');
+            const chapterListDiv = document.getElementById('chapterList');
+            
+            if (fileInput.files.length === 0) return;
 
-            // Check if a file was picked
-            if (fileInput.files.length === 0) {
-                messageBox.innerText = "Please pick a file first!";
-                return;
-            }
-
-            messageBox.innerText = "Working on it...";
+            statusBox.innerText = "Reading the pages... Please wait a moment!";
+            chapterListDiv.innerHTML = ""; // Clear out any old lists
+            foundChapters = [];
 
             try {
-                // Read the numbers you typed
-                const parts = rangeInput.split('-');
-                const startPage = parseInt(parts[0]) - 1; // Computers start counting at 0, not 1
-                const endPage = parseInt(parts[1]) - 1;
+                // Get your PDF file ready
+                const file = fileInput.files[0];
+                myOriginalPdfBytes = await file.arrayBuffer();
+                
+                // Open the book so the reading helper can see it
+                const pdf = await pdfjsLib.getDocument({data: myOriginalPdfBytes}).promise;
+                const totalPages = pdf.numPages;
 
-                // Read the original big PDF
-                const fileBytes = await fileInput.files[0].arrayBuffer();
-                const pdfDoc = await PDFLib.PDFDocument.load(fileBytes);
+                // Flip through every single page, one by one
+                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                    const page = await pdf.getPage(pageNum);
+                    const textContent = await page.getTextContent();
+                    
+                    // Put all the words on the page together into one big sentence
+                    const pageText = textContent.items.map(item => item.str).join(' ');
 
-                // Create a brand new, empty PDF
+                    // Tell the computer to hunt for the word "Chapter" and a number
+                    const chapterMatch = pageText.match(/Chapter\s+[0-9]+/i);
+                    
+                    if (chapterMatch) {
+                        // If we find it, write down the name and the page number
+                        foundChapters.push({
+                            name: chapterMatch[0],
+                            startPage: pageNum
+                        });
+                    }
+                }
+
+                // Now, use simple math to figure out where each chapter ends
+                for (let i = 0; i < foundChapters.length; i++) {
+                    if (i + 1 < foundChapters.length) {
+                        // A chapter usually ends right before the next one starts
+                        foundChapters[i].endPage = foundChapters[i + 1].startPage - 1;
+                    } else {
+                        // The very last chapter ends at the back cover of the book
+                        foundChapters[i].endPage = totalPages;
+                    }
+                }
+
+                // Show the nice buttons on your screen
+                if (foundChapters.length === 0) {
+                    statusBox.innerText = "I read the whole book but could not find the word 'Chapter'.";
+                } else {
+                    statusBox.innerText = "I found them! Click any button below to download your chapters.";
+                    
+                    foundChapters.forEach(chapter => {
+                        const itemBox = document.createElement('div');
+                        itemBox.className = 'chapter-item';
+                        itemBox.innerHTML = `
+                            <span><b>${chapter.name}</b> <br> (Pages ${chapter.startPage} to ${chapter.endPage})</span>
+                            <button onclick="cutAndDownload(${chapter.startPage}, ${chapter.endPage}, '${chapter.name}')">Download</button>
+                        `;
+                        chapterListDiv.appendChild(itemBox);
+                    });
+                }
+
+            } catch (error) {
+                statusBox.innerText = "Oops! I had a little trouble reading this file.";
+            }
+        }
+
+        // This function acts like scissors to cut out the chapter you click on
+        async function cutAndDownload(start, end, chapterName) {
+            const statusBox = document.getElementById('statusMessage');
+            statusBox.innerText = `Cutting out ${chapterName}...`;
+
+            try {
+                // Open the original big book
+                const pdfDoc = await PDFLib.PDFDocument.load(myOriginalPdfBytes);
+                
+                // Create a totally empty, brand new book
                 const newPdf = await PDFLib.PDFDocument.create();
 
-                // Copy only the pages we want into the new PDF
-                for (let i = startPage; i <= endPage; i++) {
+                // Carefully copy the specific pages you asked for
+                for (let i = start - 1; i <= end - 1; i++) {
                     const [copiedPage] = await newPdf.copyPages(pdfDoc, [i]);
                     newPdf.addPage(copiedPage);
                 }
 
-                // Save the new PDF and start downloading it to your computer
+                // Save the new little book and send it to your computer
                 const pdfBytes = await newPdf.save();
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = "My_New_Chapter.pdf";
+                link.download = `${chapterName}.pdf`;
                 link.click();
 
-                messageBox.innerText = "All done! Your chapter is downloading.";
+                statusBox.innerText = `${chapterName} is completely ready and downloaded!`;
             } catch (error) {
-                // If you type a page that doesn't exist, it warns you
-                messageBox.innerText = "Oops! Something went wrong. Please check your page numbers.";
+                statusBox.innerText = "Oops! Something went wrong while I was cutting the pages.";
             }
         }
     </script>
