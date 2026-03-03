@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NexPYQ - Public Econ & Data Science Hub</title>
+    <title>NexPYQ - Econ & Data Hub</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -33,7 +33,7 @@
     <style>
         body, main, aside, div, nav, header { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
         
-        /* Panel Transitions */
+        /* Panel Animations */
         .ai-panel { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
         .ai-panel.open { transform: translateX(0); }
         .left-drawer { transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
@@ -42,268 +42,301 @@
         .modal { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
         .modal.open { opacity: 1; pointer-events: auto; }
         
-        /* Animations */
+        /* Vision Scan Animation */
         @keyframes scan-line { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
         .scanner-line { position: absolute; width: 100%; height: 2px; background: #3b82f6; box-shadow: 0 0 15px #3b82f6; animation: scan-line 2s infinite linear; display: none; }
         .scanning-image .scanner-line { display: block; }
         
+        /* Audio Waveform Animation */
         .audio-waves { display: none; align-items: flex-end; justify-content: center; gap: 4px; height: 40px; }
         .scanning-audio .audio-waves { display: flex; }
         .scanning-audio .upload-icon { display: none; }
         .wave { width: 6px; background: #8b5cf6; border-radius: 3px; animation: bounce 1s infinite ease-in-out; }
+        .wave:nth-child(1) { animation-delay: 0.1s; } .wave:nth-child(2) { animation-delay: 0.3s; }
+        .wave:nth-child(3) { animation-delay: 0.0s; } .wave:nth-child(4) { animation-delay: 0.4s; }
+        .wave:nth-child(5) { animation-delay: 0.2s; }
         @keyframes bounce { 0%, 100% { height: 10px; } 50% { height: 40px; } }
 
         /* Skeletons */
-        .skeleton { animation: pulse 1.5s infinite ease-in-out; border-radius: 6px; }
-        @keyframes pulse { 0%, 100% { background-color: rgba(148, 163, 184, 0.1); } 50% { background-color: rgba(148, 163, 184, 0.2); } }
+        @keyframes pulse-light { 0%, 100% { background-color: #f1f5f9; } 50% { background-color: #e2e8f0; } }
+        @keyframes pulse-dark { 0%, 100% { background-color: #1e293b; } 50% { background-color: #334155; } }
+        .skeleton { animation: pulse-light 1.5s infinite ease-in-out; border-radius: 6px; }
+        .dark .skeleton { animation: pulse-dark 1.5s infinite ease-in-out; }
 
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 dark:bg-darkbg dark:text-slate-200 h-screen flex flex-col overflow-hidden relative font-sans">
+<body class="bg-slate-50 text-slate-800 dark:bg-darkbg dark:text-slate-200 h-screen flex flex-col overflow-hidden relative">
 
     <div class="absolute inset-0 z-0 pointer-events-none bg-grid-pattern-light dark:bg-grid-pattern"></div>
-    <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 dark:bg-blue-600/5 rounded-full blur-[100px] z-0"></div>
+    <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/20 dark:bg-blue-600/10 rounded-full blur-[100px] z-0 pointer-events-none"></div>
+    <div class="absolute bottom-0 left-0 w-[600px] h-[600px] bg-purple-500/20 dark:bg-purple-600/10 rounded-full blur-[120px] z-0 pointer-events-none"></div>
 
     <nav class="bg-white/70 dark:bg-darkbg/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-darkborder/50 px-6 py-4 flex justify-between items-center z-30 relative">
         <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             </div>
-            <h1 class="text-2xl font-black tracking-tight dark:text-white">NexPYQ.</h1>
+            <h1 class="text-2xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-slate-800 to-slate-500 dark:from-white dark:to-slate-400">NexPYQ.</h1>
+            <span class="bg-violet-100 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 text-[10px] uppercase tracking-widest px-2.5 py-1 rounded-full border border-violet-200 dark:border-violet-500/20 font-bold ml-1">v5.0 Pro</span>
         </div>
-        
         <div class="flex items-center gap-4">
-            <button onclick="togglePdfDrawer()" class="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:bg-rose-500/20">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"></path></svg>
-                Book Splitter
+            <button onclick="togglePdfDrawer()" class="flex items-center gap-2 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 hover:bg-rose-100 dark:hover:bg-rose-500/20 text-rose-700 dark:text-rose-400 px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 3v5h5M16 13H8M16 17H8M10 9H8"></path></svg>
+                PDF Splitter
             </button>
-            <button onclick="toggleTheme()" class="text-slate-500 dark:text-slate-400 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
-                <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke-width="2"></path></svg>
-                <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" stroke-width="2"></path></svg>
+
+            <div class="h-6 w-px bg-slate-300 dark:bg-slate-700 mx-1"></div>
+
+            <button onclick="toggleTheme()" class="text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors focus:outline-none">
+                <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            <button class="flex items-center gap-2 bg-white/50 dark:bg-darkcard/50 backdrop-blur-md border border-slate-200 dark:border-darkborder hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 px-5 py-2 rounded-xl text-sm font-semibold shadow-sm transition-all">
+                Continue with Google
             </button>
         </div>
     </nav>
 
     <div class="flex flex-1 overflow-hidden relative z-10">
-        <aside class="w-72 bg-white/40 dark:bg-darkbg/40 backdrop-blur-xl border-r border-slate-200 dark:border-darkborder p-6 space-y-8 overflow-y-auto">
-            <div>
-                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Current Studies</h3>
-                
-                <label class="block text-xs font-semibold text-slate-500 mb-2">Selected Course</label>
-                <select class="w-full bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none mb-6">
-                    <optgroup label="Present Courses" class="text-blue-500 font-bold">
-                        <option selected>Public Economics</option>
-                        <option>Data Science for Economists</option>
-                    </optgroup>
-                    <optgroup label="Improvements" class="text-amber-500 font-bold">
-                        <option>Intermediate Microeconomics</option>
-                        <option>Intermediate Macroeconomics</option>
-                        <option>Statistical Methods</option>
-                        <option>Accounting</option>
-                    </optgroup>
-                </select>
-                
-                <label class="block text-xs font-semibold text-slate-500 mb-2">Active Module</label>
-                <select class="w-full bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-xl px-4 py-3 text-sm outline-none">
-                    <option>Ch 1: Externalities & Public Goods</option>
-                    <option>Ch 2: Taxation Theory</option>
-                    <option>Ch 3: Cost-Benefit Analysis</option>
-                </select>
+        <aside class="w-72 bg-white/40 dark:bg-darkbg/40 backdrop-blur-xl border-r border-slate-200/50 dark:border-darkborder/50 flex flex-col z-10">
+            <div class="p-6 flex-1 overflow-y-auto space-y-8">
+                <div>
+                    <h3 class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-4 flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-blue-500"></div> Active Context</h3>
+                    
+                    <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 mb-2">Selected Course</label>
+                    <select class="w-full bg-white/50 dark:bg-darkcard/50 backdrop-blur-md border border-slate-200 dark:border-darkborder text-slate-800 dark:text-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none mb-5 shadow-sm font-medium transition-all">
+                        
+                        <optgroup label="Present Courses" class="font-bold text-blue-600 dark:text-blue-400">
+                            <option value="eco2" class="text-slate-700 dark:text-slate-200 font-normal" selected>Econometrics II</option>
+                            <option value="dynopt" class="text-slate-700 dark:text-slate-200 font-normal">Dynamic Optimization</option>
+                            <option value="pubeco" class="text-slate-700 dark:text-slate-200 font-normal">Public Economics</option>
+                            <option value="datasci" class="text-slate-700 dark:text-slate-200 font-normal">Data Science</option>
+                        </optgroup>
+
+                        <optgroup label="Improvement Courses" class="font-bold text-violet-600 dark:text-violet-400">
+                            <option value="microeco" class="text-slate-700 dark:text-slate-200 font-normal">Microeconomics</option>
+                            <option value="macroeco" class="text-slate-700 dark:text-slate-200 font-normal">Macroeconomics</option>
+                            <option value="statmethods" class="text-slate-700 dark:text-slate-200 font-normal">Statistical Methods</option>
+                            <option value="accounting" class="text-slate-700 dark:text-slate-200 font-normal">Accounting</option>
+                        </optgroup>
+                        
+                    </select>
+                </div>
             </div>
         </aside>
 
-        <main class="flex-1 overflow-y-auto p-8">
-            <div class="max-w-4xl mx-auto space-y-8">
+        <main class="flex-1 flex flex-col overflow-y-auto p-8 relative scroll-smooth">
+            <div class="max-w-4xl mx-auto w-full space-y-8">
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div onclick="openUploadModal('vision')" class="bg-white/60 dark:bg-darkcard/60 backdrop-blur-lg border border-blue-500/20 p-6 rounded-2xl cursor-pointer hover:border-blue-500/50 transition-all group">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div onclick="openUploadModal('vision')" class="bg-white/60 dark:bg-darkcard/60 backdrop-blur-lg border border-blue-200 dark:border-blue-500/20 hover:border-blue-400 dark:hover:border-blue-500/50 rounded-2xl p-6 cursor-pointer transition-all duration-300 group shadow-sm hover:shadow-xl hover:-translate-y-1 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="flex items-center gap-4 relative z-10">
+                            <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
                             </div>
                             <div>
-                                <h3 class="font-bold dark:text-white">Scan Exam Paper</h3>
-                                <p class="text-xs text-slate-500">Image to Question Text</p>
+                                <h3 class="font-bold text-slate-800 dark:text-slate-200">Scan Exam Paper</h3>
+                                <p class="text-slate-500 dark:text-slate-400 text-xs mt-1">Image to PYQ Text</p>
                             </div>
                         </div>
                     </div>
 
-                    <div onclick="openUploadModal('audio')" class="bg-white/60 dark:bg-darkcard/60 backdrop-blur-lg border border-purple-500/20 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 transition-all group relative">
-                        <span class="absolute top-3 right-3 text-[9px] font-bold text-purple-400 border border-purple-400/30 px-2 py-0.5 rounded uppercase">2h Max</span>
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                    <div onclick="openUploadModal('audio')" class="bg-white/60 dark:bg-darkcard/60 backdrop-blur-lg border border-violet-200 dark:border-violet-500/20 hover:border-violet-400 dark:hover:border-violet-500/50 rounded-2xl p-6 cursor-pointer transition-all duration-300 group shadow-sm hover:shadow-xl hover:-translate-y-1 relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br from-violet-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div class="absolute top-4 right-4 bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300 text-[9px] font-bold px-2 py-0.5 rounded uppercase tracking-wider">1.5 Context</div>
+                        <div class="flex items-center gap-4 relative z-10">
+                            <div class="w-12 h-12 rounded-xl bg-violet-100 dark:bg-violet-500/20 text-violet-600 dark:text-violet-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
                             </div>
                             <div>
-                                <h3 class="font-bold dark:text-white">Lecture Audio</h3>
-                                <p class="text-xs text-slate-500">Gemini 1.5 Transcription</p>
+                                <h3 class="font-bold text-slate-800 dark:text-slate-200">Upload Lecture Audio</h3>
+                                <p class="text-slate-500 dark:text-slate-400 text-xs mt-1">Accepts up to 2-hour MP3</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="space-y-4">
-                    <h2 class="text-xl font-bold dark:text-white flex items-center gap-2">
-                        <span class="w-2 h-6 bg-blue-600 rounded-full"></span> Archive: Public Economics
-                    </h2>
-                    
-                    <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl shadow-sm">
-                        <div class="flex justify-between items-start mb-4">
-                            <span class="bg-purple-500/10 text-purple-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter">Lecture Transcript</span>
-                            <span class="text-xs text-slate-500">Duration: 1h 52m</span>
-                        </div>
-                        <h4 class="font-bold text-lg dark:text-white mb-2 leading-tight">Externalities & Coase Theorem Discussion</h4>
-                        <p class="text-sm text-slate-500 mb-4 line-clamp-2 italic">"...the professor spent significant time debating the 'reciprocal nature' of externalities, specifically focusing on the cattle-ranch vs crop-farm example from Coase's 1960 paper..."</p>
-                        <button onclick="alert('Viewing Transcript...')" class="text-sm font-bold text-blue-600 hover:text-blue-500 flex items-center gap-2">
-                            <span>✨</span> Analyze Potential Exam Questions
-                        </button>
-                    </div>
-                </div>
             </div>
         </main>
     </div>
 
-    <div id="pdfDrawer" class="left-drawer fixed top-0 left-0 w-[450px] h-full bg-white dark:bg-darkbg border-r border-slate-200 dark:border-darkborder shadow-2xl z-50 flex flex-col">
-        <div class="p-6 border-b border-slate-100 dark:border-darkborder flex justify-between items-center bg-rose-500/5">
-            <h3 class="font-black text-rose-500 text-lg flex items-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"></path></svg>
-                Book Splitter
-            </h3>
-            <button onclick="togglePdfDrawer()" class="text-slate-400 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+    <div id="pdfDrawer" class="left-drawer absolute top-0 left-0 w-[450px] h-full bg-white/95 dark:bg-[#020617]/95 backdrop-blur-2xl border-r border-slate-200 dark:border-darkborder shadow-2xl flex flex-col z-50">
+        <div class="p-6 border-b border-slate-100 dark:border-darkborder flex justify-between items-center bg-rose-50/50 dark:bg-rose-900/10">
+            <div>
+                <h3 class="font-black text-rose-600 dark:text-rose-400 text-lg flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zM14 3v5h5M16 13H8M16 17H8M10 9H8"></path></svg>
+                    PDF Index Splitter
+                </h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Extract chapters instantly via digital maps</p>
+            </div>
+            <button onclick="togglePdfDrawer()" class="text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 p-2 rounded-xl transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
-        <div class="p-6 overflow-y-auto space-y-6 flex-1">
-            <div class="border-2 border-dashed border-rose-300 dark:border-rose-600/50 rounded-2xl p-8 text-center bg-rose-500/5 relative group cursor-pointer">
-                <input type="file" id="pdfFileInput" accept="application/pdf" onchange="readTheIndex()" class="absolute inset-0 opacity-0 cursor-pointer">
-                <p class="text-sm font-bold text-rose-600 mb-1">Upload Textbook PDF</p>
-                <p class="text-[10px] text-slate-500 uppercase">Extract by Chapter Index</p>
+
+        <div class="p-6 flex-1 overflow-y-auto space-y-6">
+            <div class="border-2 border-dashed border-rose-300 dark:border-rose-600/50 rounded-2xl p-8 text-center bg-rose-50/50 dark:bg-rose-900/10 cursor-pointer hover:bg-rose-100 dark:hover:bg-rose-900/20 transition-colors relative group">
+                <input type="file" id="pdfFileInput" accept="application/pdf" onchange="readTheIndex()" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                <svg class="w-8 h-8 text-rose-500 dark:text-rose-400 mx-auto mb-3 group-hover:-translate-y-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                <h4 class="text-sm font-bold text-rose-700 dark:text-rose-300">Select Textbook PDF</h4>
+                <p class="text-xs text-rose-600/70 dark:text-rose-400/70 mt-1">Must have a built-in table of contents</p>
             </div>
-            <div id="pdfStatusBox" class="hidden text-xs font-bold text-center p-2 rounded-lg bg-slate-100 dark:bg-slate-800"></div>
-            <div id="pdfChapterList" class="space-y-2"></div>
+
+            <div id="pdfStatusBox" class="hidden text-sm font-semibold text-center p-3 rounded-lg bg-slate-100 dark:bg-darkborder text-slate-700 dark:text-slate-300 animate-pulse">
+                Processing file...
+            </div>
+
+            <div id="pdfChapterList" class="space-y-3 pb-8"></div>
         </div>
     </div>
 
-    <div id="uploadModal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
-        <div class="bg-white dark:bg-darkcard rounded-3xl p-8 w-[500px] border border-slate-200 dark:border-darkborder">
-            <h3 id="modalTitle" class="text-2xl font-black mb-2 dark:text-white">Upload Content</h3>
-            <p id="modalDesc" class="text-sm text-slate-500 mb-6">Select a file to begin AI processing.</p>
-            <div id="dropZone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-12 text-center relative overflow-hidden bg-slate-50 dark:bg-darkbg">
-                <div class="scanner-line"></div>
-                <div class="audio-waves"><div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div></div>
-                <p id="uploadText" class="text-sm font-bold text-slate-400">Click to browse or drop here</p>
-            </div>
-            <div class="mt-8 flex justify-end gap-4">
-                <button onclick="closeUploadModal()" class="px-6 py-2 text-sm font-bold text-slate-500">Cancel</button>
-                <button onclick="simulateUpload()" class="bg-blue-600 text-white px-8 py-2 rounded-xl text-sm font-bold">Process</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="overlay" onclick="closeAll()" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden"></div>
+    <div id="overlay" onclick="closeAllPanels()" class="fixed inset-0 bg-slate-900/30 dark:bg-black/50 backdrop-blur-[2px] z-40 hidden transition-opacity"></div>
 
     <script>
-        // PDF setup
+        // PDF Worker Setup
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-        let myPdfBytes;
 
+        // Base App Logic
         function toggleTheme() { document.documentElement.classList.toggle('dark'); }
-        function togglePdfDrawer() { 
-            const drawer = document.getElementById('pdfDrawer');
-            const overlay = document.getElementById('overlay');
-            drawer.classList.toggle('open');
-            overlay.classList.toggle('hidden');
+        const overlay = document.getElementById('overlay');
+        const pdfDrawer = document.getElementById('pdfDrawer');
+
+        function togglePdfDrawer() {
+            const isOpen = pdfDrawer.classList.contains('open');
+            if (isOpen) {
+                pdfDrawer.classList.remove('open');
+                overlay.classList.add('hidden');
+            } else {
+                pdfDrawer.classList.add('open');
+                overlay.classList.remove('hidden');
+            }
         }
 
-        function openUploadModal(type) {
-            document.getElementById('uploadModal').classList.add('open');
-            document.getElementById('overlay').classList.remove('hidden');
-            const title = document.getElementById('modalTitle');
-            title.innerText = type === 'vision' ? "Scan Exam Paper" : "Upload Lecture Audio";
+        function closeAllPanels() {
+            pdfDrawer.classList.remove('open');
+            overlay.classList.add('hidden');
         }
 
-        function closeUploadModal() {
-            document.getElementById('uploadModal').classList.remove('open');
-            document.getElementById('overlay').classList.add('hidden');
-            document.getElementById('dropZone').className = "border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-12 text-center relative overflow-hidden bg-slate-50 dark:bg-darkbg";
-        }
+        // --- PDF TOOL LOGIC ---
+        let myOriginalPdfBytes; 
+        let foundChapters = [];
 
-        function closeAll() {
-            document.getElementById('pdfDrawer').classList.remove('open');
-            closeUploadModal();
-        }
-
-        function simulateUpload() {
-            const dropZone = document.getElementById('dropZone');
-            const title = document.getElementById('modalTitle').innerText;
-            
-            if(title.includes("Scan")) dropZone.classList.add('scanning-image');
-            else dropZone.classList.add('scanning-audio');
-            
-            document.getElementById('uploadText').innerText = "Gemini is thinking...";
-            setTimeout(() => {
-                alert("Success! Content processed by AI.");
-                closeUploadModal();
-            }, 2500);
-        }
-
-        // PDF Splitter Logic
         async function readTheIndex() {
-            const file = document.getElementById('pdfFileInput').files[0];
+            const fileInput = document.getElementById('pdfFileInput');
             const statusBox = document.getElementById('pdfStatusBox');
-            const chapterList = document.getElementById('pdfChapterList');
-            if (!file) return;
+            const chapterListDiv = document.getElementById('pdfChapterList');
+            
+            if (fileInput.files.length === 0) return;
 
             statusBox.classList.remove('hidden');
-            statusBox.innerText = "Indexing book...";
-            chapterList.innerHTML = "";
-            
-            myPdfBytes = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({data: myPdfBytes}).promise;
-            const bookIndex = await pdf.getOutline();
+            statusBox.innerText = "Scanning document index...";
+            chapterListDiv.innerHTML = ""; 
+            foundChapters = [];
 
-            if (!bookIndex) {
-                statusBox.innerText = "No digital index found in this file.";
-                return;
-            }
+            try {
+                const file = fileInput.files[0];
+                myOriginalPdfBytes = await file.arrayBuffer();
+                
+                const pdf = await pdfjsLib.getDocument({data: myOriginalPdfBytes}).promise;
+                const totalPages = pdf.numPages;
 
-            let found = [];
-            for (let item of bookIndex) {
-                let dest = item.dest;
-                if (typeof dest === 'string') dest = await pdf.getDestination(dest);
-                if (dest) {
-                    const page = await pdf.getPageIndex(dest[0]);
-                    found.push({ name: item.title, start: page + 1 });
+                const bookIndex = await pdf.getOutline();
+
+                if (!bookIndex || bookIndex.length === 0) {
+                    statusBox.innerText = "Error: This PDF does not have a digital bookmark/outline structure.";
+                    statusBox.classList.add('text-red-600', 'bg-red-50', 'dark:bg-red-900/20');
+                    return;
                 }
-            }
 
-            found.sort((a,b) => a.start - b.start);
-            found.forEach((ch, i) => {
-                ch.end = (i + 1 < found.length) ? found[i+1].start - 1 : pdf.numPages;
-                const div = document.createElement('div');
-                div.className = "p-3 bg-slate-50 dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-xl flex justify-between items-center";
-                div.innerHTML = `<div class="overflow-hidden"><p class="text-xs font-bold truncate">${ch.name}</p><p class="text-[10px] text-slate-500">p. ${ch.start}-${ch.end}</p></div>
-                                 <button onclick="cut('${ch.name}', ${ch.start}, ${ch.end})" class="text-[10px] font-black uppercase text-rose-500">Extract</button>`;
-                chapterList.appendChild(div);
-            });
-            statusBox.innerText = `Mapped ${found.length} sections.`;
+                for (let i = 0; i < bookIndex.length; i++) {
+                    const item = bookIndex[i];
+                    let destination = item.dest;
+
+                    if (typeof destination === 'string') {
+                        destination = await pdf.getDestination(destination);
+                    }
+
+                    if (destination) {
+                        const pageIndexNumber = await pdf.getPageIndex(destination[0]);
+                        foundChapters.push({
+                            name: item.title,
+                            startPage: pageIndexNumber + 1 
+                        });
+                    }
+                }
+
+                foundChapters.sort((a, b) => a.startPage - b.startPage);
+
+                for (let i = 0; i < foundChapters.length; i++) {
+                    if (i + 1 < foundChapters.length) {
+                        foundChapters[i].endPage = foundChapters[i + 1].startPage - 1;
+                    } else {
+                        foundChapters[i].endPage = totalPages;
+                    }
+                }
+
+                statusBox.innerText = `Index mapped successfully. Found ${foundChapters.length} sections.`;
+                statusBox.classList.replace('animate-pulse', 'text-green-600');
+                
+                // Render with Tailwind HTML
+                foundChapters.forEach(chapter => {
+                    if (chapter.startPage <= chapter.endPage) {
+                        const itemBox = document.createElement('div');
+                        itemBox.className = 'bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-4 rounded-xl shadow-sm flex justify-between items-center gap-4 hover:border-rose-300 dark:hover:border-rose-500/50 transition-colors group';
+                        itemBox.innerHTML = `
+                            <div class="flex-1 overflow-hidden">
+                                <h5 class="font-bold text-sm text-slate-800 dark:text-slate-200 truncate" title="${chapter.name}">${chapter.name}</h5>
+                                <p class="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">Pages: ${chapter.startPage} - ${chapter.endPage}</p>
+                            </div>
+                            <button onclick="cutAndDownload(${chapter.startPage}, ${chapter.endPage}, '${chapter.name.replace(/'/g, "\\'")}')" class="bg-slate-100 dark:bg-darkbg text-slate-600 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-900/30 dark:hover:text-rose-400 px-3 py-2 rounded-lg text-xs font-bold transition-colors whitespace-nowrap border border-slate-200 dark:border-darkborder">
+                                Extract
+                            </button>
+                        `;
+                        chapterListDiv.appendChild(itemBox);
+                    }
+                });
+
+            } catch (error) {
+                console.error(error);
+                statusBox.innerText = "Error reading file. Ensure it is a valid PDF.";
+            }
         }
 
-        async function cut(name, s, e) {
-            const pdfDoc = await PDFLib.PDFDocument.load(myPdfBytes);
-            const newPdf = await PDFLib.PDFDocument.create();
-            for (let i = s-1; i <= e-1; i++) {
-                const [cp] = await newPdf.copyPages(pdfDoc, [i]);
-                newPdf.addPage(cp);
+        async function cutAndDownload(start, end, chapterName) {
+            const statusBox = document.getElementById('pdfStatusBox');
+            statusBox.innerText = `Extracting: ${chapterName}...`;
+            statusBox.classList.add('animate-pulse');
+
+            try {
+                const pdfDoc = await PDFLib.PDFDocument.load(myOriginalPdfBytes);
+                const newPdf = await PDFLib.PDFDocument.create();
+
+                for (let i = start - 1; i <= end - 1; i++) {
+                    const [copiedPage] = await newPdf.copyPages(pdfDoc, [i]);
+                    newPdf.addPage(copiedPage);
+                }
+
+                const pdfBytes = await newPdf.save();
+                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                
+                const safeName = chapterName.replace(/[^a-zA-Z0-9 ]/g, "").trim();
+                link.download = `${safeName || 'extracted_chapter'}.pdf`;
+                link.click();
+
+                statusBox.innerText = `Ready! Downloaded: ${safeName}`;
+                statusBox.classList.remove('animate-pulse');
+            } catch (error) {
+                statusBox.innerText = "Extraction failed.";
+                statusBox.classList.remove('animate-pulse');
             }
-            const bytes = await newPdf.save();
-            const blob = new Blob([bytes], {type: 'application/pdf'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `${name.replace(/[^a-z0-9]/gi, '_')}.pdf`;
-            a.click();
         }
     </script>
 </body>
