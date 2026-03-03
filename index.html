@@ -1,208 +1,309 @@
 <!DOCTYPE html>
-<html>
+<html lang="en" class="dark">
 <head>
-    <title>Super Fast Index Reader</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexPYQ - Public Econ & Data Science Hub</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        darkbg: '#020617', 
+                        darkcard: '#0f172a', 
+                        darkborder: '#1e293b', 
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0V0zm39 39V1H1v38h38z' fill='%23334155' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E\")",
+                        'grid-pattern-light': "url(\"data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0V0zm39 39V1H1v38h38z' fill='%23cbd5e1' fill-opacity='0.3' fill-rule='evenodd'/%3E%3C/svg%3E\")",
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+
     <style>
-        /* The beautiful background colors and shapes */
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%); 
-            min-height: 100vh; 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            color: #333; 
-        }
+        body, main, aside, div, nav, header { transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease; }
         
-        .box { 
-            background-color: white; 
-            padding: 40px; 
-            border-radius: 15px; 
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); 
-            max-width: 600px; 
-            width: 90%; 
-            text-align: center; 
-        }
-
-        h2 { color: #4a4a4a; margin-bottom: 10px; }
-        p { color: #666; margin-bottom: 20px; }
-
-        input[type="file"] { 
-            display: block; 
-            margin: 20px auto; 
-            padding: 10px; 
-            border: 2px dashed #9face6; 
-            border-radius: 10px; 
-            background-color: #f9f9f9; 
-            cursor: pointer; 
-            width: 80%; 
-        }
-
-        button { 
-            background-color: #5c6bc0; 
-            color: white; 
-            border: none; 
-            padding: 10px 20px; 
-            font-size: 16px; 
-            border-radius: 8px; 
-            cursor: pointer; 
-            transition: background-color 0.3s; 
-        }
+        /* Panel Transitions */
+        .ai-panel { transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .ai-panel.open { transform: translateX(0); }
+        .left-drawer { transform: translateX(-100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .left-drawer.open { transform: translateX(0); }
         
-        button:hover { background-color: #3f51b5; }
+        .modal { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
+        .modal.open { opacity: 1; pointer-events: auto; }
+        
+        /* Animations */
+        @keyframes scan-line { 0% { top: 0; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        .scanner-line { position: absolute; width: 100%; height: 2px; background: #3b82f6; box-shadow: 0 0 15px #3b82f6; animation: scan-line 2s infinite linear; display: none; }
+        .scanning-image .scanner-line { display: block; }
+        
+        .audio-waves { display: none; align-items: flex-end; justify-content: center; gap: 4px; height: 40px; }
+        .scanning-audio .audio-waves { display: flex; }
+        .scanning-audio .upload-icon { display: none; }
+        .wave { width: 6px; background: #8b5cf6; border-radius: 3px; animation: bounce 1s infinite ease-in-out; }
+        @keyframes bounce { 0%, 100% { height: 10px; } 50% { height: 40px; } }
 
-        .chapter-item { 
-            background-color: #f0f4ff; 
-            margin: 15px 0; 
-            padding: 15px 20px; 
-            border-radius: 10px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
-            border-left: 5px solid #5c6bc0; 
-        }
-        
-        .chapter-item span { text-align: left; font-size: 15px; }
-        
-        #statusMessage { font-weight: bold; color: #5c6bc0; margin: 20px 0; }
+        /* Skeletons */
+        .skeleton { animation: pulse 1.5s infinite ease-in-out; border-radius: 6px; }
+        @keyframes pulse { 0%, 100% { background-color: rgba(148, 163, 184, 0.1); } 50% { background-color: rgba(148, 163, 184, 0.2); } }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
 </head>
-<body>
-    <div class="box">
-        <h2>Instant Index Reader</h2>
-        <p>Choose your PDF file. I will look at its hidden digital index to instantly find your chapters!</p>
+<body class="bg-slate-50 text-slate-800 dark:bg-darkbg dark:text-slate-200 h-screen flex flex-col overflow-hidden relative font-sans">
+
+    <div class="absolute inset-0 z-0 pointer-events-none bg-grid-pattern-light dark:bg-grid-pattern"></div>
+    <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-500/10 dark:bg-blue-600/5 rounded-full blur-[100px] z-0"></div>
+
+    <nav class="bg-white/70 dark:bg-darkbg/70 backdrop-blur-xl border-b border-slate-200/50 dark:border-darkborder/50 px-6 py-4 flex justify-between items-center z-30 relative">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center shadow-lg">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+            <h1 class="text-2xl font-black tracking-tight dark:text-white">NexPYQ.</h1>
+        </div>
         
-        <input type="file" id="pdfFile" accept="application/pdf" onchange="readTheIndex()">
-        
-        <p id="statusMessage">Waiting for your file...</p>
-        
-        <div id="chapterList"></div>
+        <div class="flex items-center gap-4">
+            <button onclick="togglePdfDrawer()" class="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 px-4 py-2 rounded-xl text-sm font-bold transition-all hover:bg-rose-500/20">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"></path></svg>
+                Book Splitter
+            </button>
+            <button onclick="toggleTheme()" class="text-slate-500 dark:text-slate-400 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                <svg id="theme-icon-sun" class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke-width="2"></path></svg>
+                <svg id="theme-icon-moon" class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" stroke-width="2"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <div class="flex flex-1 overflow-hidden relative z-10">
+        <aside class="w-72 bg-white/40 dark:bg-darkbg/40 backdrop-blur-xl border-r border-slate-200 dark:border-darkborder p-6 space-y-8 overflow-y-auto">
+            <div>
+                <h3 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Current Studies</h3>
+                
+                <label class="block text-xs font-semibold text-slate-500 mb-2">Selected Course</label>
+                <select class="w-full bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none mb-6">
+                    <optgroup label="Present Courses" class="text-blue-500 font-bold">
+                        <option selected>Public Economics</option>
+                        <option>Data Science for Economists</option>
+                    </optgroup>
+                    <optgroup label="Improvements" class="text-amber-500 font-bold">
+                        <option>Intermediate Microeconomics</option>
+                        <option>Intermediate Macroeconomics</option>
+                        <option>Statistical Methods</option>
+                        <option>Accounting</option>
+                    </optgroup>
+                </select>
+                
+                <label class="block text-xs font-semibold text-slate-500 mb-2">Active Module</label>
+                <select class="w-full bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-xl px-4 py-3 text-sm outline-none">
+                    <option>Ch 1: Externalities & Public Goods</option>
+                    <option>Ch 2: Taxation Theory</option>
+                    <option>Ch 3: Cost-Benefit Analysis</option>
+                </select>
+            </div>
+        </aside>
+
+        <main class="flex-1 overflow-y-auto p-8">
+            <div class="max-w-4xl mx-auto space-y-8">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div onclick="openUploadModal('vision')" class="bg-white/60 dark:bg-darkcard/60 backdrop-blur-lg border border-blue-500/20 p-6 rounded-2xl cursor-pointer hover:border-blue-500/50 transition-all group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold dark:text-white">Scan Exam Paper</h3>
+                                <p class="text-xs text-slate-500">Image to Question Text</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div onclick="openUploadModal('audio')" class="bg-white/60 dark:bg-darkcard/60 backdrop-blur-lg border border-purple-500/20 p-6 rounded-2xl cursor-pointer hover:border-purple-500/50 transition-all group relative">
+                        <span class="absolute top-3 right-3 text-[9px] font-bold text-purple-400 border border-purple-400/30 px-2 py-0.5 rounded uppercase">2h Max</span>
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path></svg>
+                            </div>
+                            <div>
+                                <h3 class="font-bold dark:text-white">Lecture Audio</h3>
+                                <p class="text-xs text-slate-500">Gemini 1.5 Transcription</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h2 class="text-xl font-bold dark:text-white flex items-center gap-2">
+                        <span class="w-2 h-6 bg-blue-600 rounded-full"></span> Archive: Public Economics
+                    </h2>
+                    
+                    <div class="bg-white dark:bg-darkcard border border-slate-200 dark:border-darkborder p-6 rounded-2xl shadow-sm">
+                        <div class="flex justify-between items-start mb-4">
+                            <span class="bg-purple-500/10 text-purple-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-tighter">Lecture Transcript</span>
+                            <span class="text-xs text-slate-500">Duration: 1h 52m</span>
+                        </div>
+                        <h4 class="font-bold text-lg dark:text-white mb-2 leading-tight">Externalities & Coase Theorem Discussion</h4>
+                        <p class="text-sm text-slate-500 mb-4 line-clamp-2 italic">"...the professor spent significant time debating the 'reciprocal nature' of externalities, specifically focusing on the cattle-ranch vs crop-farm example from Coase's 1960 paper..."</p>
+                        <button onclick="alert('Viewing Transcript...')" class="text-sm font-bold text-blue-600 hover:text-blue-500 flex items-center gap-2">
+                            <span>✨</span> Analyze Potential Exam Questions
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
 
+    <div id="pdfDrawer" class="left-drawer fixed top-0 left-0 w-[450px] h-full bg-white dark:bg-darkbg border-r border-slate-200 dark:border-darkborder shadow-2xl z-50 flex flex-col">
+        <div class="p-6 border-b border-slate-100 dark:border-darkborder flex justify-between items-center bg-rose-500/5">
+            <h3 class="font-black text-rose-500 text-lg flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z"></path></svg>
+                Book Splitter
+            </h3>
+            <button onclick="togglePdfDrawer()" class="text-slate-400 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="p-6 overflow-y-auto space-y-6 flex-1">
+            <div class="border-2 border-dashed border-rose-300 dark:border-rose-600/50 rounded-2xl p-8 text-center bg-rose-500/5 relative group cursor-pointer">
+                <input type="file" id="pdfFileInput" accept="application/pdf" onchange="readTheIndex()" class="absolute inset-0 opacity-0 cursor-pointer">
+                <p class="text-sm font-bold text-rose-600 mb-1">Upload Textbook PDF</p>
+                <p class="text-[10px] text-slate-500 uppercase">Extract by Chapter Index</p>
+            </div>
+            <div id="pdfStatusBox" class="hidden text-xs font-bold text-center p-2 rounded-lg bg-slate-100 dark:bg-slate-800"></div>
+            <div id="pdfChapterList" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <div id="uploadModal" class="modal fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-darkcard rounded-3xl p-8 w-[500px] border border-slate-200 dark:border-darkborder">
+            <h3 id="modalTitle" class="text-2xl font-black mb-2 dark:text-white">Upload Content</h3>
+            <p id="modalDesc" class="text-sm text-slate-500 mb-6">Select a file to begin AI processing.</p>
+            <div id="dropZone" class="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-12 text-center relative overflow-hidden bg-slate-50 dark:bg-darkbg">
+                <div class="scanner-line"></div>
+                <div class="audio-waves"><div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div><div class="wave"></div></div>
+                <p id="uploadText" class="text-sm font-bold text-slate-400">Click to browse or drop here</p>
+            </div>
+            <div class="mt-8 flex justify-end gap-4">
+                <button onclick="closeUploadModal()" class="px-6 py-2 text-sm font-bold text-slate-500">Cancel</button>
+                <button onclick="simulateUpload()" class="bg-blue-600 text-white px-8 py-2 rounded-xl text-sm font-bold">Process</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="overlay" onclick="closeAll()" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden"></div>
+
     <script>
-        // Tell the helper exactly how to work
+        // PDF setup
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        let myPdfBytes;
 
-        let myOriginalPdfBytes; 
-        let foundChapters = [];
-
-        // This function looks directly at the digital map/index
-        async function readTheIndex() {
-            const fileInput = document.getElementById('pdfFile');
-            const statusBox = document.getElementById('statusMessage');
-            const chapterListDiv = document.getElementById('chapterList');
-            
-            if (fileInput.files.length === 0) return;
-
-            statusBox.innerText = "Checking the index... Almost done!";
-            chapterListDiv.innerHTML = ""; 
-            foundChapters = [];
-
-            try {
-                const file = fileInput.files[0];
-                myOriginalPdfBytes = await file.arrayBuffer();
-                
-                const pdf = await pdfjsLib.getDocument({data: myOriginalPdfBytes}).promise;
-                const totalPages = pdf.numPages;
-
-                // Ask the PDF file to hand over its digital index (Outline)
-                const bookIndex = await pdf.getOutline();
-
-                // If the book creator forgot to put an index in, we tell you
-                if (!bookIndex || bookIndex.length === 0) {
-                    statusBox.innerText = "Oh no! This specific book does not have a digital index built inside it.";
-                    return;
-                }
-
-                // Look at every single title listed in the index
-                for (let i = 0; i < bookIndex.length; i++) {
-                    const item = bookIndex[i];
-                    let destination = item.dest;
-
-                    // Sometimes the destination is written in a secret code, so we decode it
-                    if (typeof destination === 'string') {
-                        destination = await pdf.getDestination(destination);
-                    }
-
-                    // If we found the real destination, we figure out exactly what page number it is
-                    if (destination) {
-                        const pageIndexNumber = await pdf.getPageIndex(destination[0]);
-                        foundChapters.push({
-                            name: item.title,
-                            startPage: pageIndexNumber + 1 // Computers start at 0, so we add 1 to make it normal
-                        });
-                    }
-                }
-
-                // Put the chapters in the correct order, just in case they got mixed up
-                foundChapters.sort(function(a, b) { return a.startPage - b.startPage });
-
-                // Use simple math to figure out where each chapter ends
-                for (let i = 0; i < foundChapters.length; i++) {
-                    if (i + 1 < foundChapters.length) {
-                        // A chapter ends right before the next one starts
-                        foundChapters[i].endPage = foundChapters[i + 1].startPage - 1;
-                    } else {
-                        // The very last chapter ends at the end of the book
-                        foundChapters[i].endPage = totalPages;
-                    }
-                }
-
-                // Show the beautiful list on the screen
-                statusBox.innerText = "Index found! Click any button below to download your sections.";
-                
-                foundChapters.forEach(chapter => {
-                    // Sometimes the index lists chapters that are on the exact same page, we skip those so it doesn't break
-                    if (chapter.startPage <= chapter.endPage) {
-                        const itemBox = document.createElement('div');
-                        itemBox.className = 'chapter-item';
-                        itemBox.innerHTML = `
-                            <span><b>${chapter.name}</b> <br> (Pages ${chapter.startPage} to ${chapter.endPage})</span>
-                            <button onclick="cutAndDownload(${chapter.startPage}, ${chapter.endPage}, '${chapter.name}')">Download</button>
-                        `;
-                        chapterListDiv.appendChild(itemBox);
-                    }
-                });
-
-            } catch (error) {
-                statusBox.innerText = "Oops! I had trouble reading the index of this file.";
-            }
+        function toggleTheme() { document.documentElement.classList.toggle('dark'); }
+        function togglePdfDrawer() { 
+            const drawer = document.getElementById('pdfDrawer');
+            const overlay = document.getElementById('overlay');
+            drawer.classList.toggle('open');
+            overlay.classList.toggle('hidden');
         }
 
-        // This function acts like scissors to cut out the chapter you click on
-        async function cutAndDownload(start, end, chapterName) {
-            const statusBox = document.getElementById('statusMessage');
-            statusBox.innerText = `Cutting out ${chapterName}...`;
+        function openUploadModal(type) {
+            document.getElementById('uploadModal').classList.add('open');
+            document.getElementById('overlay').classList.remove('hidden');
+            const title = document.getElementById('modalTitle');
+            title.innerText = type === 'vision' ? "Scan Exam Paper" : "Upload Lecture Audio";
+        }
 
-            try {
-                const pdfDoc = await PDFLib.PDFDocument.load(myOriginalPdfBytes);
-                const newPdf = await PDFLib.PDFDocument.create();
+        function closeUploadModal() {
+            document.getElementById('uploadModal').classList.remove('open');
+            document.getElementById('overlay').classList.add('hidden');
+            document.getElementById('dropZone').className = "border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-12 text-center relative overflow-hidden bg-slate-50 dark:bg-darkbg";
+        }
 
-                // Carefully copy the specific pages you asked for
-                for (let i = start - 1; i <= end - 1; i++) {
-                    const [copiedPage] = await newPdf.copyPages(pdfDoc, [i]);
-                    newPdf.addPage(copiedPage);
-                }
+        function closeAll() {
+            document.getElementById('pdfDrawer').classList.remove('open');
+            closeUploadModal();
+        }
 
-                // Save the new little book and send it to your computer
-                const pdfBytes = await newPdf.save();
-                const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                
-                // We clean up the chapter name just in case it has weird symbols that computers hate
-                const safeName = chapterName.replace(/[^a-zA-Z0-9 ]/g, "");
-                link.download = `${safeName}.pdf`;
-                link.click();
+        function simulateUpload() {
+            const dropZone = document.getElementById('dropZone');
+            const title = document.getElementById('modalTitle').innerText;
+            
+            if(title.includes("Scan")) dropZone.classList.add('scanning-image');
+            else dropZone.classList.add('scanning-audio');
+            
+            document.getElementById('uploadText').innerText = "Gemini is thinking...";
+            setTimeout(() => {
+                alert("Success! Content processed by AI.");
+                closeUploadModal();
+            }, 2500);
+        }
 
-                statusBox.innerText = `${safeName} is completely ready and downloaded!`;
-            } catch (error) {
-                statusBox.innerText = "Oops! Something went wrong while I was cutting the pages.";
+        // PDF Splitter Logic
+        async function readTheIndex() {
+            const file = document.getElementById('pdfFileInput').files[0];
+            const statusBox = document.getElementById('pdfStatusBox');
+            const chapterList = document.getElementById('pdfChapterList');
+            if (!file) return;
+
+            statusBox.classList.remove('hidden');
+            statusBox.innerText = "Indexing book...";
+            chapterList.innerHTML = "";
+            
+            myPdfBytes = await file.arrayBuffer();
+            const pdf = await pdfjsLib.getDocument({data: myPdfBytes}).promise;
+            const bookIndex = await pdf.getOutline();
+
+            if (!bookIndex) {
+                statusBox.innerText = "No digital index found in this file.";
+                return;
             }
+
+            let found = [];
+            for (let item of bookIndex) {
+                let dest = item.dest;
+                if (typeof dest === 'string') dest = await pdf.getDestination(dest);
+                if (dest) {
+                    const page = await pdf.getPageIndex(dest[0]);
+                    found.push({ name: item.title, start: page + 1 });
+                }
+            }
+
+            found.sort((a,b) => a.start - b.start);
+            found.forEach((ch, i) => {
+                ch.end = (i + 1 < found.length) ? found[i+1].start - 1 : pdf.numPages;
+                const div = document.createElement('div');
+                div.className = "p-3 bg-slate-50 dark:bg-darkcard border border-slate-200 dark:border-darkborder rounded-xl flex justify-between items-center";
+                div.innerHTML = `<div class="overflow-hidden"><p class="text-xs font-bold truncate">${ch.name}</p><p class="text-[10px] text-slate-500">p. ${ch.start}-${ch.end}</p></div>
+                                 <button onclick="cut('${ch.name}', ${ch.start}, ${ch.end})" class="text-[10px] font-black uppercase text-rose-500">Extract</button>`;
+                chapterList.appendChild(div);
+            });
+            statusBox.innerText = `Mapped ${found.length} sections.`;
+        }
+
+        async function cut(name, s, e) {
+            const pdfDoc = await PDFLib.PDFDocument.load(myPdfBytes);
+            const newPdf = await PDFLib.PDFDocument.create();
+            for (let i = s-1; i <= e-1; i++) {
+                const [cp] = await newPdf.copyPages(pdfDoc, [i]);
+                newPdf.addPage(cp);
+            }
+            const bytes = await newPdf.save();
+            const blob = new Blob([bytes], {type: 'application/pdf'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `${name.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+            a.click();
         }
     </script>
 </body>
