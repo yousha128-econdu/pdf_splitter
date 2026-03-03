@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Smart & Beautiful PDF Splitter</title>
+    <title>Super Fast Index Reader</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <style>
-        /* The beautiful background colors and font */
+        /* The beautiful background colors and shapes */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%); 
@@ -17,7 +17,6 @@
             color: #333; 
         }
         
-        /* The floating white card in the middle */
         .box { 
             background-color: white; 
             padding: 40px; 
@@ -31,7 +30,6 @@
         h2 { color: #4a4a4a; margin-bottom: 10px; }
         p { color: #666; margin-bottom: 20px; }
 
-        /* Making the file chooser look neat */
         input[type="file"] { 
             display: block; 
             margin: 20px auto; 
@@ -43,7 +41,6 @@
             width: 80%; 
         }
 
-        /* The colorful download buttons */
         button { 
             background-color: #5c6bc0; 
             color: white; 
@@ -57,7 +54,6 @@
         
         button:hover { background-color: #3f51b5; }
 
-        /* The neat little boxes for each chapter */
         .chapter-item { 
             background-color: #f0f4ff; 
             margin: 15px 0; 
@@ -72,16 +68,15 @@
         
         .chapter-item span { text-align: left; font-size: 15px; }
         
-        /* The text that tells you what the website is doing */
         #statusMessage { font-weight: bold; color: #5c6bc0; margin: 20px 0; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h2>Smart Chapter Finder</h2>
-        <p>Choose your big PDF file. I will read it and find the chapters for you!</p>
+        <h2>Instant Index Reader</h2>
+        <p>Choose your PDF file. I will look at its hidden digital index to instantly find your chapters!</p>
         
-        <input type="file" id="pdfFile" accept="application/pdf" onchange="readAndFindChapters()">
+        <input type="file" id="pdfFile" accept="application/pdf" onchange="readTheIndex()">
         
         <p id="statusMessage">Waiting for your file...</p>
         
@@ -89,71 +84,80 @@
     </div>
 
     <script>
-        // Tell the reading helper exactly how to work
+        // Tell the helper exactly how to work
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         let myOriginalPdfBytes; 
         let foundChapters = [];
 
-        // This function acts like eyes, flipping through pages to find chapters
-        async function readAndFindChapters() {
+        // This function looks directly at the digital map/index
+        async function readTheIndex() {
             const fileInput = document.getElementById('pdfFile');
             const statusBox = document.getElementById('statusMessage');
             const chapterListDiv = document.getElementById('chapterList');
             
             if (fileInput.files.length === 0) return;
 
-            statusBox.innerText = "Reading the pages... Please wait a moment!";
-            chapterListDiv.innerHTML = ""; // Clear out any old lists
+            statusBox.innerText = "Checking the index... Almost done!";
+            chapterListDiv.innerHTML = ""; 
             foundChapters = [];
 
             try {
-                // Get your PDF file ready
                 const file = fileInput.files[0];
                 myOriginalPdfBytes = await file.arrayBuffer();
                 
-                // Open the book so the reading helper can see it
                 const pdf = await pdfjsLib.getDocument({data: myOriginalPdfBytes}).promise;
                 const totalPages = pdf.numPages;
 
-                // Flip through every single page, one by one
-                for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-                    const page = await pdf.getPage(pageNum);
-                    const textContent = await page.getTextContent();
-                    
-                    // Put all the words on the page together into one big sentence
-                    const pageText = textContent.items.map(item => item.str).join(' ');
+                // Ask the PDF file to hand over its digital index (Outline)
+                const bookIndex = await pdf.getOutline();
 
-                    // Tell the computer to hunt for the word "Chapter" and a number
-                    const chapterMatch = pageText.match(/Chapter\s+[0-9]+/i);
-                    
-                    if (chapterMatch) {
-                        // If we find it, write down the name and the page number
+                // If the book creator forgot to put an index in, we tell you
+                if (!bookIndex || bookIndex.length === 0) {
+                    statusBox.innerText = "Oh no! This specific book does not have a digital index built inside it.";
+                    return;
+                }
+
+                // Look at every single title listed in the index
+                for (let i = 0; i < bookIndex.length; i++) {
+                    const item = bookIndex[i];
+                    let destination = item.dest;
+
+                    // Sometimes the destination is written in a secret code, so we decode it
+                    if (typeof destination === 'string') {
+                        destination = await pdf.getDestination(destination);
+                    }
+
+                    // If we found the real destination, we figure out exactly what page number it is
+                    if (destination) {
+                        const pageIndexNumber = await pdf.getPageIndex(destination[0]);
                         foundChapters.push({
-                            name: chapterMatch[0],
-                            startPage: pageNum
+                            name: item.title,
+                            startPage: pageIndexNumber + 1 // Computers start at 0, so we add 1 to make it normal
                         });
                     }
                 }
 
-                // Now, use simple math to figure out where each chapter ends
+                // Put the chapters in the correct order, just in case they got mixed up
+                foundChapters.sort(function(a, b) { return a.startPage - b.startPage });
+
+                // Use simple math to figure out where each chapter ends
                 for (let i = 0; i < foundChapters.length; i++) {
                     if (i + 1 < foundChapters.length) {
-                        // A chapter usually ends right before the next one starts
+                        // A chapter ends right before the next one starts
                         foundChapters[i].endPage = foundChapters[i + 1].startPage - 1;
                     } else {
-                        // The very last chapter ends at the back cover of the book
+                        // The very last chapter ends at the end of the book
                         foundChapters[i].endPage = totalPages;
                     }
                 }
 
-                // Show the nice buttons on your screen
-                if (foundChapters.length === 0) {
-                    statusBox.innerText = "I read the whole book but could not find the word 'Chapter'.";
-                } else {
-                    statusBox.innerText = "I found them! Click any button below to download your chapters.";
-                    
-                    foundChapters.forEach(chapter => {
+                // Show the beautiful list on the screen
+                statusBox.innerText = "Index found! Click any button below to download your sections.";
+                
+                foundChapters.forEach(chapter => {
+                    // Sometimes the index lists chapters that are on the exact same page, we skip those so it doesn't break
+                    if (chapter.startPage <= chapter.endPage) {
                         const itemBox = document.createElement('div');
                         itemBox.className = 'chapter-item';
                         itemBox.innerHTML = `
@@ -161,11 +165,11 @@
                             <button onclick="cutAndDownload(${chapter.startPage}, ${chapter.endPage}, '${chapter.name}')">Download</button>
                         `;
                         chapterListDiv.appendChild(itemBox);
-                    });
-                }
+                    }
+                });
 
             } catch (error) {
-                statusBox.innerText = "Oops! I had a little trouble reading this file.";
+                statusBox.innerText = "Oops! I had trouble reading the index of this file.";
             }
         }
 
@@ -175,10 +179,7 @@
             statusBox.innerText = `Cutting out ${chapterName}...`;
 
             try {
-                // Open the original big book
                 const pdfDoc = await PDFLib.PDFDocument.load(myOriginalPdfBytes);
-                
-                // Create a totally empty, brand new book
                 const newPdf = await PDFLib.PDFDocument.create();
 
                 // Carefully copy the specific pages you asked for
@@ -192,10 +193,13 @@
                 const blob = new Blob([pdfBytes], { type: 'application/pdf' });
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(blob);
-                link.download = `${chapterName}.pdf`;
+                
+                // We clean up the chapter name just in case it has weird symbols that computers hate
+                const safeName = chapterName.replace(/[^a-zA-Z0-9 ]/g, "");
+                link.download = `${safeName}.pdf`;
                 link.click();
 
-                statusBox.innerText = `${chapterName} is completely ready and downloaded!`;
+                statusBox.innerText = `${safeName} is completely ready and downloaded!`;
             } catch (error) {
                 statusBox.innerText = "Oops! Something went wrong while I was cutting the pages.";
             }
